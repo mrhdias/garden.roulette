@@ -469,22 +469,19 @@ class CyclicRoulette(Roulette):
         super(CyclicRoulette, self).__init__(**kw)
         self.selected_value = self.tick.first_value
         self.center()
-        if len(self.rollinglist):
-            self.cycle = len(self.rollinglist)
-            self.zero_indexed = True
 
     def on_tick(self, *args):
         tick = self.tick
         if tick:
-            tick.cycle = self.cycle
-            tick.zero_indexed = self.zero_indexed
+            tick.cycle = len(self.rollinglist) if len(self.rollinglist) else self.cycle
+            tick.zero_indexed = True if len(self.rollinglist) else self.zero_indexed
         super(CyclicRoulette, self).on_tick(*args)
     def on_cycle(self, *args):
         if self.tick:
-            self.tick.cycle = self.cycle
+            self.tick.cycle = len(self.rollinglist) if len(self.rollinglist) else self.cycle
     def on_zero_indexed(self, *args):
         if self.tick:
-            self.tick.zero_indexed = self.zero_indexed
+            self.tick.zero_indexed = True if len(self.rollinglist) else self.zero_indexed
     def index_of(self, val):
         tick = self.tick
         if not tick:
