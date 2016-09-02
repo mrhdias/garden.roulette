@@ -401,7 +401,8 @@ class Roulette(Tickline):
     def set_selected_value(self, *args):
         '''set :attr:`selected_value` to the currently slot.'''
         idx = self.round_(self.rolling_value)
-        if self.invert: idx *= -1
+        if self.invert and len(self.rollinglist):
+            idx *= -1
         self.selected_value = get_str_date(idx, self.strftime) if self.strftime else \
                                 self.rollinglist[idx] if len(self.rollinglist) else idx
     def round_(self, val):
