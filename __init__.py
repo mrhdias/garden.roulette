@@ -502,13 +502,12 @@ if __name__ == '__main__':
     from kivy.uix.boxlayout import BoxLayout
     from kivy.uix.label import Label
     b = BoxLayout()
-    b.add_widget(Roulette(width='140sp', density=2.8, selected_value=0, strftime="%a %d %b", invert=True))
-    b.add_widget(CyclicRoulette(density=2.8, rollinglist=['cat','dog','frog','mouse','rabbit']))
+    b.add_widget(Roulette(width='120sp', density=2.8, selected_value=0, strftime="%a %d %b", invert=True))
+    b.add_widget(CyclicRoulette(width='75sp', density=2.8, rollinglist=['cat','dog','frog','mouse','rabbit']))
     b.add_widget(Roulette(density=2.8, selected_value=2013))
     b.add_widget(CyclicRoulette(cycle=12, density=2.8, zero_indexed=False))
     b.add_widget(CyclicRoulette(cycle=30, density=2.8, zero_indexed=False))
-    b.add_widget(TimeFormatCyclicRoulette(cycle=24))
-    b.add_widget(TimeFormatCyclicRoulette(cycle=60))
+    b.add_widget(TimeFormatCyclicRoulette(cycle=24, format_str="{:02d}"))
     b.add_widget(TimeFormatCyclicRoulette(cycle=60))
     selected_value = Label()
     rolling_value = Label()
