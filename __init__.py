@@ -174,6 +174,7 @@ class Slot(Tick):
     font_size = NumericProperty('20sp')
     int_valued = BooleanProperty(True)
     format_str = StringProperty('{}')
+    rollinglist = ListProperty([])
     def value_str(self, value):
         return self.format_str.format(value)
     def slot_value(self, index, *args, **kw):
@@ -187,7 +188,8 @@ class Slot(Tick):
         Should be override if necessary.'''
         return val
     def get_label_texture(self, index, **kw):
-        label = CoreLabel(text=self.value_str(self.slot_value(index)),
+        label = CoreLabel(text=self.rollinglist[self.slot_value(index-1)] \
+                          if len(self.rollinglist) else self.value_str(self.slot_value(index)),
                           font_size=self.font_size, **kw)
         label.refresh()
         return label.texture
@@ -284,6 +286,8 @@ class Roulette(Tickline):
     # public attributes
     #===========================================================================
 
+    rollinglist = ListProperty([])
+
     selected_value = ObjectProperty(None)
     '''the currently selected value.'''
 
@@ -336,6 +340,8 @@ class Roulette(Tickline):
         super(Roulette, self).__init__(**kw)
         self.scale = dp(10)
         self.tick = self.tick_cls()
+        if len(self.rollinglist):
+            self.tick.rollinglist = self.rollinglist
         self._trigger_calibrate()
 
     def on_tick_cls(self, *args):
@@ -376,7 +382,8 @@ class Roulette(Tickline):
         effect.on_coasted_to_stop = self._trigger_set_selection
     def set_selected_value(self, *args):
         '''set :attr:`selected_value` to the currently slot.'''
-        self.selected_value = self.round_(self.rolling_value)
+        self.selected_value = self.rollinglist[self.round_(self.rolling_value)-1] \
+                                if len(self.rollinglist) else self.round_(self.rolling_value)
     def round_(self, val):
         '''round an arbitrary rolling value to a legal selection value.
         Should be overriden if necessary.'''
@@ -443,6 +450,9 @@ class CyclicRoulette(Roulette):
         super(CyclicRoulette, self).__init__(**kw)
         self.selected_value = self.tick.first_value
         self.center()
+        if len(self.rollinglist):
+            self.cycle = len(self.rollinglist)
+            self.zero_indexed = True
 
     def on_tick(self, *args):
         tick = self.tick
@@ -474,6 +484,7 @@ if __name__ == '__main__':
     from kivy.uix.label import Label
     b = BoxLayout()
     b.add_widget(Roulette(density=2.8, selected_value=2013))
+    b.add_widget(CyclicRoulette(density=2.8, rollinglist=['cat','dog','frog','mouse','rabbit']))
     b.add_widget(CyclicRoulette(cycle=12, density=2.8, zero_indexed=False))
     b.add_widget(CyclicRoulette(cycle=30, density=2.8, zero_indexed=False))
     b.add_widget(TimeFormatCyclicRoulette(cycle=24))
