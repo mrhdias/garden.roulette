@@ -123,6 +123,8 @@ from kivy.properties import ListProperty, ObjectProperty, AliasProperty, \
 from kivy.graphics.vertex_instructions import BorderImage
 from os.path import join, dirname
 
+from time import strftime
+import datetime
 
 class SlotLabeller(TickLabeller):
     def __init__(self, tickline):
@@ -175,6 +177,8 @@ class Slot(Tick):
     int_valued = BooleanProperty(True)
     format_str = StringProperty('{}')
     rollinglist = ListProperty([])
+    invert = BooleanProperty(False)
+    strftime = StringProperty('')
     def value_str(self, value):
         return self.format_str.format(value)
     def slot_value(self, index, *args, **kw):
@@ -188,8 +192,17 @@ class Slot(Tick):
         Should be override if necessary.'''
         return val
     def get_label_texture(self, index, **kw):
-        label = CoreLabel(text=self.rollinglist[self.slot_value(index-1)] \
-                          if len(self.rollinglist) else self.value_str(self.slot_value(index)),
+        if self.invert: index *= -1
+        
+        def get_str_date():
+            if -1 <= index <= 1: return(('Yesterday', 'Today', 'Tomorrow')[index+1])
+            rolldate = datetime.datetime.now()
+            rolldate += datetime.timedelta(days=index)
+            return rolldate.strftime(self.strftime)
+
+        label = CoreLabel(text=get_str_date() if self.strftime else \
+                            self.rollinglist[self.slot_value(index-1)] if len(self.rollinglist) else \
+                            self.value_str(self.slot_value(index)),
                           font_size=self.font_size, **kw)
         label.refresh()
         return label.texture
@@ -287,6 +300,8 @@ class Roulette(Tickline):
     #===========================================================================
 
     rollinglist = ListProperty([])
+    invert = BooleanProperty(False)
+    strftime = StringProperty('')
 
     selected_value = ObjectProperty(None)
     '''the currently selected value.'''
@@ -352,6 +367,11 @@ class Roulette(Tickline):
             tick.font_size = self.font_size
             tick.int_valued = self.int_valued
             tick.format_str = self.format_str
+            if self.strftime: tick.strftime = self.strftime
+            if self.invert:
+                self.selected_value *= -1
+                tick.invert = self.invert
+            if len(self.rollinglist): tick.rollinglist = self.rollinglist
     def on_size(self, *args):
         self.scale = self.line_length / self.density
         self.recenter()
@@ -483,8 +503,9 @@ if __name__ == '__main__':
     from kivy.uix.boxlayout import BoxLayout
     from kivy.uix.label import Label
     b = BoxLayout()
-    b.add_widget(Roulette(density=2.8, selected_value=2013))
+    b.add_widget(Roulette(width='140sp', density=2.8, selected_value=0, strftime="%a %d %b", invert=True))
     b.add_widget(CyclicRoulette(density=2.8, rollinglist=['cat','dog','frog','mouse','rabbit']))
+    b.add_widget(Roulette(density=2.8, selected_value=2013))
     b.add_widget(CyclicRoulette(cycle=12, density=2.8, zero_indexed=False))
     b.add_widget(CyclicRoulette(cycle=30, density=2.8, zero_indexed=False))
     b.add_widget(TimeFormatCyclicRoulette(cycle=24))
