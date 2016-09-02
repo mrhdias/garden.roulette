@@ -200,7 +200,7 @@ class Slot(Tick):
     def get_label_texture(self, index, **kw):
         if self.invert: index *= -1
         label = CoreLabel(text=get_str_date(index, self.strftime) if self.strftime else \
-                            self.rollinglist[self.slot_value(index-1)] if len(self.rollinglist) else \
+                            self.rollinglist[self.slot_value(index)] if len(self.rollinglist) else \
                             self.value_str(self.slot_value(index)),
                           font_size=self.font_size, **kw)
         label.refresh()
@@ -366,7 +366,8 @@ class Roulette(Tickline):
             tick.format_str = self.format_str
             if self.strftime: tick.strftime = self.strftime
             if self.invert:
-                self.selected_value *= -1
+                if self.selected_value:
+                    self.selected_value *= -1
                 tick.invert = self.invert
             if len(self.rollinglist): tick.rollinglist = self.rollinglist
     def on_size(self, *args):
@@ -402,7 +403,7 @@ class Roulette(Tickline):
         idx = self.round_(self.rolling_value)
         if self.invert: idx *= -1
         self.selected_value = get_str_date(idx, self.strftime) if self.strftime else \
-                                self.rollinglist[idx-1] if len(self.rollinglist) else idx
+                                self.rollinglist[idx] if len(self.rollinglist) else idx
     def round_(self, val):
         '''round an arbitrary rolling value to a legal selection value.
         Should be overriden if necessary.'''
