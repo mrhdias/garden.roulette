@@ -126,6 +126,12 @@ from os.path import join, dirname
 from time import strftime
 import datetime
 
+def get_str_date(index, strftime):
+    if -1 <= index <= 1: return(('Yesterday', 'Today', 'Tomorrow')[index+1])
+    rolldate = datetime.datetime.now()
+    rolldate += datetime.timedelta(days=index)
+    return rolldate.strftime(strftime)
+
 class SlotLabeller(TickLabeller):
     def __init__(self, tickline):
         self.instructions = {}
@@ -193,14 +199,7 @@ class Slot(Tick):
         return val
     def get_label_texture(self, index, **kw):
         if self.invert: index *= -1
-        
-        def get_str_date():
-            if -1 <= index <= 1: return(('Yesterday', 'Today', 'Tomorrow')[index+1])
-            rolldate = datetime.datetime.now()
-            rolldate += datetime.timedelta(days=index)
-            return rolldate.strftime(self.strftime)
-
-        label = CoreLabel(text=get_str_date() if self.strftime else \
+        label = CoreLabel(text=get_str_date(index, self.strftime) if self.strftime else \
                             self.rollinglist[self.slot_value(index-1)] if len(self.rollinglist) else \
                             self.value_str(self.slot_value(index)),
                           font_size=self.font_size, **kw)
@@ -355,8 +354,6 @@ class Roulette(Tickline):
         super(Roulette, self).__init__(**kw)
         self.scale = dp(10)
         self.tick = self.tick_cls()
-        if len(self.rollinglist):
-            self.tick.rollinglist = self.rollinglist
         self._trigger_calibrate()
 
     def on_tick_cls(self, *args):
@@ -402,8 +399,10 @@ class Roulette(Tickline):
         effect.on_coasted_to_stop = self._trigger_set_selection
     def set_selected_value(self, *args):
         '''set :attr:`selected_value` to the currently slot.'''
-        self.selected_value = self.rollinglist[self.round_(self.rolling_value)-1] \
-                                if len(self.rollinglist) else self.round_(self.rolling_value)
+        idx = self.round_(self.rolling_value)
+        if self.invert: idx *= -1
+        self.selected_value = get_str_date(idx, self.strftime) if self.strftime else \
+                                self.rollinglist[idx-1] if len(self.rollinglist) else idx
     def round_(self, val):
         '''round an arbitrary rolling value to a legal selection value.
         Should be overriden if necessary.'''
